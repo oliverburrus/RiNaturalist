@@ -12,38 +12,33 @@ Missing_species <- function(user){
   eBird_data <- tidyr::separate(eBird_data, "Species", into = c("Common_name", "Scientific_name"), sep = " - ")
   eBird_Species <- eBird_data$Common_name
   
-  #Load required packages
-  library(httr)
-  library(rlist)
-  library(reactable)
-  library(dplyr)
-  
   #API set-up
-  resp <- GET(paste("https://api.inaturalist.org/v1/observations/species_counts?user_id=", user, "&page=1&hrank=species", sep = ""))
-  parsed <- content(resp, as = "parsed")
-  parsed$results
+  resp <- httr::GET(paste("https://api.inaturalist.org/v1/observations/species_counts?user_id=", user, "&page=1&hrank=species", sep = ""))
+  parsed <- httr::content(resp, as = "parsed")
+
   options(warn=-1)
   #Retreving data from the API
   for(x in 0:(parsed$total_results/500)+1){
-    resp <- GET(paste("https://api.inaturalist.org/v1/observations/species_counts?user_id=", user, "&page=", as.character(x), "&hrank=species", sep = ""))
-    parsed <- content(resp, as = "parsed")
+    resp <- httr::GET(paste("https://api.inaturalist.org/v1/observations/species_counts?user_id=", user, "&page=", as.character(x), "&hrank=species", sep = ""))
+    parsed <- httr::content(resp, as = "parsed")
     modJSON <- parsed$results 
-    modJSON <- list.select(modJSON, taxon$preferred_common_name, taxon$iconic_taxon_name)
+    modJSON <- rlist::list.select(modJSON, taxon$preferred_common_name, taxon$iconic_taxon_name)
     if(x == 1){
-      data <- list.stack(modJSON)
+      data <- rlist::list.stack(modJSON)
     }
     if(x > 1){
-      dataz <- list.stack(modJSON)
+      dataz <- rlist::list.stack(modJSON)
       data <- rbind(data, dataz)
     }
   }
   options(warn=0)
+  
   data <- data.frame(data$V1, data$V2)
   names(data) <- c("Species", "Iconic Taxon")
   data <- dplyr::filter(data, `Iconic Taxon`=="Aves")
   eBird_data$Logical <- eBird_data$Common_name %in% data$Species
-  eBird_data <- filter(eBird_data, Logical == FALSE)
+  eBird_data <- dplyr::filter(eBird_data, Logical == FALSE)
   Species <- eBird_data$Common_name
   return(Species)
-  
 }
+

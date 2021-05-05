@@ -19,7 +19,7 @@ Missing_species <- function(user){
   library(dplyr)
   
   #API set-up
-  resp <- GET(paste("https://api.inaturalist.org/v1/observations/species_counts?user_id=", user, "&page=", as.character(x), "&hrank=species", sep = ""))
+  resp <- GET(paste("https://api.inaturalist.org/v1/observations/species_counts?user_id=", user, "&page=1&hrank=species", sep = ""))
   parsed <- content(resp, as = "parsed")
   parsed$results
   options(warn=-1)
